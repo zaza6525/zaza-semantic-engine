@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 import csv
 import io
+import re
 
 
 class IngestionError(Exception):
@@ -69,7 +70,6 @@ def ingest_markdown(path: Path, encoding: str = "utf-8", fallback: str = "latin-
     text = _read_text(path, encoding, fallback)
     
     # Remove code blocks
-    import re
     text = re.sub(r'```[\s\S]*?```', '', text)
     # Remove images
     text = re.sub(r'!\[.*?\]\(.*?\)', '', text)
@@ -88,12 +88,63 @@ def ingest_markdown(path: Path, encoding: str = "utf-8", fallback: str = "latin-
     return text.strip()
 
 
+def ingest_html(path: Path, encoding: str = "utf-8", fallback: str = "latin-1") -> str:
+    """Extract text from an HTML file using BeautifulSoup."""
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:
+        raise IngestionError("beautifulsoup4 is required for HTML support. Install: pip install beautifulsoup4")
+    
+    text = _read_text(path, encoding, fallback)
+    soup = BeautifulSoup(text, 'html.parser')
+    
+    # Remove script and style elements
+    for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside']):
+        tag.decompose()
+    
+    # Get text, normalize whitespace
+    text = soup.get_text(separator='\n')
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    
+    return text.strip()
+
+
+def ingest_xml(path: Path, encoding: str = "utf-8", fallback: str = "latin-1") -> str:
+    """Extract text from an XML file using standard library xml.etree."""
+    import xml.etree.ElementTree as ET
+    
+    text = _read_text(path, encoding, fallback)
+    root = ET.fromstring(text)
+    
+    lines = []
+    for elem in root.iter():
+        if elem.text and elem.text.strip():
+            lines.append(elem.text.strip())
+    return "\n".join(lines)
+
+
+def ingest_docx(path: Path) -> str:
+    """Extract text from a DOCX (Word) file."""
+    try:
+        from docx import Document
+    except ImportError:
+        raise IngestionError("python-docx is required for DOCX support. Install: pip install python-docx")
+    
+    doc = Document(str(path))
+    paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+    return "\n\n".join(paragraphs)
+
+
 INGESTORS = {
     ".txt": ingest_txt,
     ".md": ingest_markdown,
     ".markdown": ingest_markdown,
     ".pdf": ingest_pdf,
     ".csv": ingest_csv,
+    ".html": ingest_html,
+    ".htm": ingest_html,
+    ".xml": ingest_xml,
+    ".docx": ingest_docx,
 }
 
 
@@ -122,5 +173,11 @@ def ingest_file(path: Path, encoding: str = "utf-8", fallback: str = "latin-1") 
         return ingest_pdf(path)
     elif ext == ".csv":
         return ingest_csv(path, encoding)
+    elif ext in (".html", ".htm"):
+        return ingest_html(path, encoding, fallback)
+    elif ext == ".xml":
+        return ingest_xml(path, encoding, fallback)
+    elif ext == ".docx":
+        return ingest_docx(path)
     
     raise IngestionError(f"No ingestor for extension: {ext}")

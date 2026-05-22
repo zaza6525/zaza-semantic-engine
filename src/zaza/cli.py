@@ -87,6 +87,20 @@ def cmd_search(args):
         print(f"  No documents matching '{args.query}'.")
 
 
+def cmd_api(args):
+    """Handle the api command - start the FastAPI server."""
+    try:
+        import uvicorn
+    except ImportError:
+        print("  uvicorn is required for API mode. Install: pip install uvicorn")
+        sys.exit(1)
+    
+    from zaza.api import app
+    print(f"  🌐 Starting ZAZA API server on {args.host}:{args.port}")
+    uvicorn.run(app, host=args.host, port=args.port)
+
+
+
 def build_parser():
     """Build the argument parser."""
     parser = argparse.ArgumentParser(
@@ -123,6 +137,12 @@ def build_parser():
     p_search = subparsers.add_parser("search", help="Search documents by name")
     p_search.add_argument("query", help="Search query")
     p_search.set_defaults(func=cmd_search)
+    
+    # api
+    p_api = subparsers.add_parser("api", help="Start the REST API server")
+    p_api.add_argument("--host", default="127.0.0.1", help="Host to bind to")
+    p_api.add_argument("--port", type=int, default=8000, help="Port to bind to")
+    p_api.set_defaults(func=cmd_api)
     
     return parser
 

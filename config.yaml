@@ -10,6 +10,9 @@ ingestion:
     - ".pdf"
     - ".csv"
     - ".md"
+    - ".html"
+    - ".xml"
+    - ".docx"
   encoding: "utf-8"
   fallback_encoding: "latin-1"
 
@@ -23,3 +26,8 @@ output:
   formats:
     - "json"
     - "csv"
+
+api:
+  enabled: false
+  host: "127.0.0.1"
+  port: 8000
