@@ -1,0 +1,25 @@
+# ZAZA Semantic Engine v2 - Configuration
+
+database:
+  path: "./data/zaza.db"
+
+ingestion:
+  data_dir: "./data"
+  extensions:
+    - ".txt"
+    - ".pdf"
+    - ".csv"
+    - ".md"
+  encoding: "utf-8"
+  fallback_encoding: "latin-1"
+
+analysis:
+  top_words: 20
+  min_word_length: 3
+  stop_words_language: "fr"  # "fr" or "en"
+
+output:
+  dir: "./output"
+  formats:
+    - "json"
+    - "csv"
