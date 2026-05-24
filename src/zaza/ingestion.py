@@ -151,6 +151,9 @@ INGESTORS = {
 def get_ingestor(extension: str):
     """Get the appropriate ingestor function for a file extension."""
     ext = Path(extension).suffix.lower()
+    if not ext:
+        # extension was already like ".txt" — Path() stripped it
+        ext = extension.lower()
     return INGESTORS.get(ext)
 
 

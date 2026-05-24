@@ -30,7 +30,7 @@ def cmd_report(args):
     engine = SemanticEngine(args.config)
     summary, documents = engine.generate_reports(args.format)
     
-    if args.format_text:
+    if args.text:
         from zaza.reporting import Reporter
         r = Reporter()
         print(r.format_summary_text(summary))
@@ -87,6 +87,24 @@ def cmd_search(args):
         print(f"  No documents matching '{args.query}'.")
 
 
+def cmd_search_semantic(args):
+    """Handle the semantic search command."""
+    engine = SemanticEngine(args.config)
+    docs = engine.search_semantic(args.query, n_results=args.top)
+    
+    if docs:
+        print(f"  🔍 Semantic search results for '{args.query}':")
+        for i, doc in enumerate(docs, 1):
+            score = doc.get("score", 0)
+            doc_id = doc.get("id", "")
+            preview = doc.get("document", "")[:200]
+            print(f"  {i}. (score: {score:.3f}) [{doc_id}]")
+            print(f"     {preview}")
+            print()
+    else:
+        print(f"  No semantic matches for '{args.query}'.")
+
+
 def cmd_api(args):
     """Handle the api command - start the FastAPI server."""
     try:
@@ -137,6 +155,12 @@ def build_parser():
     p_search = subparsers.add_parser("search", help="Search documents by name")
     p_search.add_argument("query", help="Search query")
     p_search.set_defaults(func=cmd_search)
+    
+    # search-semantic
+    p_search_sem = subparsers.add_parser("search-semantic", help="Semantic search using embeddings")
+    p_search_sem.add_argument("query", help="Search query")
+    p_search_sem.add_argument("--top", type=int, default=10, help="Number of results (default: 10)")
+    p_search_sem.set_defaults(func=cmd_search_semantic)
     
     # api
     p_api = subparsers.add_parser("api", help="Start the REST API server")

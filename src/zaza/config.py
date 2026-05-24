@@ -33,11 +33,20 @@ class OutputConfig:
 
 
 @dataclass
+class SemanticConfig:
+    enabled: bool = True
+    model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+    embed_dir: str = "./data/embeddings"
+    max_search_results: int = 10
+
+
+@dataclass
 class Config:
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     ingestion: IngestionConfig = field(default_factory=IngestionConfig)
     analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
+    semantic: SemanticConfig = field(default_factory=SemanticConfig)
 
 
 DEFAULT_CONFIG_PATH = Path(__file__).parent.parent.parent / "config.yaml"

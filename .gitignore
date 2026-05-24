@@ -1,12 +1,26 @@
+# Python
 __pycache__/
 *.py[cod]
+*.so
 *.egg-info/
 dist/
 build/
-venv/
+*.egg
+
+# Virtual env
 .venv/
-data/*.json
-output/*
-!.gitkeep
-*.db
-.env
+venv/
+
+# Data
+data/
+output/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

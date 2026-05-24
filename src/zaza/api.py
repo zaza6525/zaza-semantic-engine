@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body
 from pydantic import BaseModel
 
 
@@ -123,7 +123,7 @@ async def get_documents(search: Optional[str] = None):
 
 @app.get("/search")
 async def search_documents(query: str):
-    """Search documents by name."""
+    """Search documents by name (keyword)."""
     engine = app.state.engine
     if not engine:
         raise HTTPException(500, "Engine not initialized")
@@ -131,11 +131,43 @@ async def search_documents(query: str):
     return engine.search(query)
 
 
+@app.get("/search-semantic")
+async def search_semantic_documents(query: str, top: int = 10):
+    """Semantic search using document embeddings."""
+    engine = app.state.engine
+    if not engine:
+        raise HTTPException(500, "Engine not initialized")
+    
+    results = engine.search_semantic(query, n_results=top)
+    return results
+
+
+@app.get("/embeddings/status")
+async def embedding_status():
+    """Check embedding store status."""
+    engine = app.state.engine
+    if not engine:
+        return {"enabled": False, "reason": "Engine not initialized"}
+    
+    if engine.embed_store:
+        return {
+            "enabled": True,
+            "model": engine.embed_store.model_name,
+            "documents_count": engine.embed_store.collection.count(),
+        }
+    return {"enabled": False, "reason": "Embeddings not available"}
+
+
+class TextAnalysisRequest(BaseModel):
+    text: str
+    language: str = "fr"
+
+
 @app.post("/analyze")
-async def analyze_text(text: str, language: str = "fr"):
+async def analyze_text(request: TextAnalysisRequest):
     """Analyze raw text (no file needed)."""
     from zaza.analysis import analyze_text as analyze
-    result = analyze(text, stop_words_lang=language)
+    result = analyze(request.text, stop_words_lang=request.language)
     return result
 
 

@@ -17,6 +17,16 @@ class SemanticEngine:
         self.config = load_config(config_path)
         self.db = Database(self.config.database.path)
         self.reporter = Reporter(self.config.output.dir)
+        self.embed_store = None
+        if self.config.semantic.enabled:
+            try:
+                from zaza.embeddings import EmbeddingStore
+                self.embed_store = EmbeddingStore(
+                    self.config.semantic.embed_dir,
+                    self.config.semantic.model_name
+                )
+            except Exception as e:
+                print(f"  ⚠️  Semantic embeddings disabled: {e}")
     
     def ingest_directory(self, dir_path: Optional[str] = None) -> List[Dict]:
         """Ingest all supported files from a directory."""
@@ -41,7 +51,7 @@ class SemanticEngine:
                 text = ingest_file(
                     file_path,
                     encoding=self.config.ingestion.encoding,
-                    fallback=self.config.ingestion.fallback
+                    fallback=self.config.ingestion.fallback_encoding
                 )
                 
                 # Store in DB
@@ -62,6 +72,15 @@ class SemanticEngine:
                 
                 # Store analysis
                 self.db.add_analysis(doc_id, analysis)
+                
+                 # Store semantic embedding
+                if self.embed_store:
+                    try:
+                        self.embed_store.add_document(
+                            str(doc_id), text, {"filename": file_path.name}
+                        )
+                    except Exception as e:
+                        print(f"  ⚠️  Embedding store error for {file_path.name}: {e}")
                 
                 results.append({
                     "filename": file_path.name,
@@ -87,7 +106,7 @@ class SemanticEngine:
     def ingest_file(self, file_path: str) -> Dict:
         """Ingest a single file."""
         path = Path(file_path)
-        text = ingest_file(path, self.config.ingestion.encoding, self.config.ingestion.fallback)
+        text = ingest_file(path, self.config.ingestion.encoding, self.config.ingestion.fallback_encoding)
         
         doc_id = self.db.add_document(
             filepath=str(path),
@@ -104,6 +123,18 @@ class SemanticEngine:
         )
         
         self.db.add_analysis(doc_id, analysis)
+        
+        # Store semantic embedding
+        if self.embed_store:
+            self.embed_store.add_document(
+                doc_id=f"{doc_id}_{path.name}",
+                text=text,
+                metadata={
+                    "filename": path.name,
+                    "filepath": str(path),
+                    "filetype": path.suffix.lower(),
+                }
+            )
         
         return {
             "filename": path.name,
@@ -122,6 +153,14 @@ class SemanticEngine:
     def search(self, query: str) -> List[Dict]:
         """Search documents by name."""
         return self.db.search(query)
+
+    def search_semantic(self, query: str, n_results: Optional[int] = None) -> List[Dict]:
+        """Semantic search across all ingested documents."""
+        if not self.embed_store:
+            return []
+        
+        max_results = n_results or self.config.semantic.max_search_results
+        return self.db.search_semantic(query, self.embed_store)[:max_results]
     
     def generate_reports(self, output_formats: Optional[List[str]] = None):
         """Generate all reports."""

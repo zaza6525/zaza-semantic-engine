@@ -159,3 +159,18 @@ class Database:
             return [dict(r) for r in rows]
         finally:
             conn.close()
+
+    def search_semantic(self, query: str, store) -> list:
+        """Semantic search using embedding store. Returns ranked results."""
+        if not store or not store.collection.count():
+            return []
+
+        results = store.search(query, n_results=store.collection.count())
+        docs = []
+        for r in results:
+            docs.append({
+                "id": r["id"],
+                "score": round(1.0 - r["distance"], 4),
+                "document": r.get("metadata", {}).get("_full_text", r["document"]),
+            })
+        return docs
