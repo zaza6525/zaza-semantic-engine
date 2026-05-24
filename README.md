@@ -1,108 +1,63 @@
-# ZAZA Semantic Engine
+# Zaza Semantic Engine
 
-A multi-format document ingestion and semantic analysis engine with persistent storage.
-
-## What it does
-
-ZAZA ingests documents (TXT, PDF, CSV, Markdown), extracts semantic metrics (word count, lexical density, top words, readability), and stores everything in a SQLite database with queryable history.
+Local-first semantic search and document indexing engine.
 
 ## Features
 
-- **Multi-format ingestion** — TXT, PDF, CSV, Markdown
-- **Semantic analysis** — word frequency, lexical density, readability scores, top keywords
-- **Persistent storage** — SQLite database with full query history
-- **CLI** — `zaza ingest`, `zaza stats`, `zaza documents`, `zaza search`
-- **Reports** — JSON and CSV export
-- **Configurable** — YAML config for all settings
-- **27 tests** — all passing
+- **Multi-format ingestion**: PDF, TXT, Markdown, JSON, YAML, CSV, EPUB
+- **Semantic search**: Hybrid search with local embeddings
+- **CLI**: Full command-line interface
+- **REST API**: FastAPI server with 5 endpoints
+- **Reporting**: JSON and CSV reports
+- **Local-only**: No external API calls, all processing on your machine
 
 ## Installation
 
 ```bash
-git clone https://github.com/zaza6525/-ZAZA-Semantic-Engine.git
-cd -ZAZA-Semantic-Engine
-pip install -e ".[dev]"
+pip install -e .
 ```
 
-## Usage
-
-### Ingest a directory
+## Quick Start
 
 ```bash
-zaza ingest ./data
-```
+# Ingest documents
+zaza ingest ./my-documents/
 
-### Ingest a single file
+# Search
+zaza search "your query"
 
-```bash
-zaza ingest --file ./data/report.pdf
-```
-
-### View statistics
-
-```bash
+# View stats
 zaza stats
-zaza stats --json
+
+# Start API server
+zaza server
 ```
 
-### List all documents
+## CLI Commands
 
-```bash
-zaza documents
-zaza documents --search report
-```
+| Command | Description |
+|---------|-------------|
+| `zaza ingest <path>` | Index documents from a directory or file |
+| `zaza search <query>` | Search indexed documents |
+| `zaza stats` | Show indexing statistics |
+| `zaza documents` | List all indexed documents |
+| `zaza report [format]` | Generate report (json/csv) |
+| `zaza server` | Start the REST API server |
+| `zaza analyze --text "..."` | Analyze text semantically |
 
-### Search documents
+## API Endpoints
 
-```bash
-zaza search quarterly
-```
-
-### Generate reports
-
-```bash
-zaza report --text
-zaza report  # saves JSON + CSV to output/
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| GET | `/summary` | Engine summary |
+| GET | `/documents` | List documents |
+| GET | `/search?q=` | Search documents |
+| POST | `/analyze` | Semantic analysis |
 
 ## Configuration
 
-Edit `config.yaml`:
-
-```yaml
-database:
-  path: "./data/zaza.db"
-
-ingestion:
-  data_dir: "./data"
-  extensions: [".txt", ".pdf", ".csv", ".md"]
-
-analysis:
-  top_words: 20
-  min_word_length: 3
-  stop_words_language: "fr"
-
-output:
-  dir: "./output"
-  formats: ["json", "csv"]
-```
-
-## Architecture
-
-```
-data/          ← Place your documents here
-src/zaza/
-  config.py       ← YAML config loader
-  ingestion.py    ← Multi-format file readers
-  analysis.py     ← Semantic analysis engine
-  database.py     ← SQLite storage layer
-  reporting.py    ← Report generation
-  engine.py       ← Main orchestrator
-  cli.py          ← CLI entry point
-tests/          ← 27 tests (100% passing)
-output/         ← Generated reports
-config.yaml     ← Configuration file
-```
+Edit `config.yaml` to customize paths, embedding models, and search settings.
 
 ## License
 
