@@ -1,11 +1,13 @@
 """Multi-format file ingestion."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict
 import csv
 import io
 import json
 import re
+
+from zaza.chunking import chunk_text
 
 
 class IngestionError(Exception):
@@ -285,3 +287,75 @@ def ingest_file(path: Path, encoding: str = "utf-8", fallback: str = "latin-1") 
         return ingest_epub(path)
     
     raise IngestionError(f"No ingestor for extension: {ext}")
+
+
+def chunk_and_embed(
+    path: Path,
+    embed_store,
+    encoding: str = "utf-8",
+    fallback: str = "latin-1",
+    max_chunk_size: int = 512,
+    overlap: int = 64,
+) -> Dict:
+    """Ingest a file, chunk it, and embed each chunk in the store.
+
+    Each chunk gets metadata: filepath, filename, filetype, file_size,
+    ingested_at, chunk_id, chunk_index, total_chunks.
+
+    Returns a dict with: filename, chunk_count, total_words, status, error (if any).
+    """
+    try:
+        text = ingest_file(path, encoding, fallback)
+    except IngestionError as e:
+        return {"filename": path.name, "chunk_count": 0, "status": f"error: {e}"}
+    except Exception as e:
+        return {"filename": path.name, "chunk_count": 0, "status": f"error: {e}"}
+
+    if not text or not text.strip():
+        return {"filename": path.name, "chunk_count": 0, "status": "empty"}
+
+    # Chunk the text
+    chunks = chunk_text(text, max_chunk_size=max_chunk_size, overlap=overlap)
+
+    if not chunks:
+        return {"filename": path.name, "chunk_count": 0, "status": "success", "total_words": 0}
+
+    # Store each chunk with metadata
+    prefix = path.name[:30].replace(" ", "_").replace(".", "_")
+    ingested_at = _now_iso()
+    file_size = path.stat().st_size
+    total_words = sum(len(c["text"].split()) for c in chunks)
+
+    added = 0
+    for chunk in chunks:
+        chunk_id = f"{prefix}_c{chunk['chunk_index']}"
+        try:
+            embed_store.add_document(
+                doc_id=chunk_id,
+                text=chunk["text"],
+                metadata={
+                    "filepath": str(path),
+                    "filename": path.name,
+                    "filetype": path.suffix.lower(),
+                    "file_size": file_size,
+                    "ingested_at": ingested_at,
+                    "chunk_index": chunk["chunk_index"],
+                    "total_chunks": chunk["total_chunks"],
+                    "_full_text": text[:8192],  # Full text for reference
+                },
+            )
+            added += 1
+        except Exception as e:
+            print(f"    ⚠️  Embedding error for {path.name} chunk {chunk['chunk_index']}: {e}")
+
+    return {
+        "filename": path.name,
+        "chunk_count": added,
+        "total_words": total_words,
+        "status": "success",
+    }
+
+
+def _now_iso():
+    from datetime import datetime
+    return datetime.now().isoformat()

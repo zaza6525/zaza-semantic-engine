@@ -4,11 +4,27 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zaza-semantic-engine"
-version = "2.0.0"
+version = "3.0.0"
 description = "Local-first multi-format document ingestion engine with semantic search using sentence-transformers and ChromaDB"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
+authors = [
+    {name = "zaza6525"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+]
 dependencies = [
     "pyyaml>=6.0",
     "pypdf>=4.0",
@@ -37,8 +53,13 @@ all = [
     "zaza-semantic-engine[api,semantic]",
 ]
 
+[project.urls]
+Homepage = "https://github.com/zaza6525/zaza-semantic-engine"
+Repository = "https://github.com/zaza6525/zaza-semantic-engine"
+
 [project.scripts]
 zaza = "zaza.cli:main"
+zaza-search-docs = "zaza.search_docs:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

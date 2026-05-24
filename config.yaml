@@ -37,3 +37,5 @@ semantic:
   model_name: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
   embed_dir: "./data/embeddings"
   max_search_results: 10
+  max_chunk_size: 512
+  overlap: 64

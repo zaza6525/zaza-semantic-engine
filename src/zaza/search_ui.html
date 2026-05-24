@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zaza Semantic Search</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; }
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        h1 { text-align: center; color: #4fc3f7; margin-bottom: 8px; font-size: 1.8em; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 32px; font-size: 0.9em; }
+        .search-box { display: flex; gap: 8px; margin-bottom: 32px; }
+        .search-box input { flex: 1; padding: 12px 16px; border: 1px solid #333; border-radius: 8px; background: #1a1e2e; color: #e0e0e0; font-size: 1em; }
+        .search-box input:focus { outline: none; border-color: #4fc3f7; }
+        .search-box button { padding: 12px 24px; background: #4fc3f7; color: #0f1117; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; }
+        .search-box button:hover { background: #29b6f6; }
+        .status-bar { margin-bottom: 24px; padding: 10px 16px; border-radius: 6px; font-size: 0.85em; }
+        .status-bar.loading { background: #1a1e2e; color: #aaa; }
+        .status-bar.error { background: #3d1f1f; color: #ef5350; }
+        .status-bar.success { background: #1b3a1b; color: #66bb6a; }
+        .result { background: #1a1e2e; border: 1px solid #2a2e3e; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+        .result:hover { border-color: #4fc3f7; }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .filename { color: #4fc3f7; font-weight: 600; }
+        .score { background: #29b6f6; color: #0f1117; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: 600; }
+        .filetype { color: #888; font-size: 0.8em; margin-left: 8px; }
+        .excerpt { color: #b0b0b0; line-height: 1.6; font-size: 0.9em; margin-bottom: 8px; }
+        .meta { color: #666; font-size: 0.75em; }
+        .no-results { text-align: center; color: #666; padding: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Zaza Semantic Search</h1>
+        <p class="subtitle">Recherche sémantique dans vos documents ingérés</p>
+
+        <div class="search-box">
+            <input type="text" id="query" placeholder="Entrez votre requête..." autofocus>
+            <button onclick="search()">Rechercher</button>
+        </div>
+
+        <div id="status" class="status-bar" style="display:none;"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        document.getElementById('query').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') search();
+        });
+
+        async function search() {
+            const query = document.getElementById('query').value.trim();
+            if (!query) return;
+
+            const statusEl = document.getElementById('status');
+            const resultsEl = document.getElementById('results');
+            statusEl.style.display = 'block';
+            statusEl.className = 'status-bar loading';
+            statusEl.textContent = 'Recherche en cours...';
+            resultsEl.innerHTML = '';
+
+            try {
+                const resp = await fetch(`/search-semantic?query=${encodeURIComponent(query)}`);
+                const data = await resp.json();
+                statusEl.style.display = 'none';
+
+                if (!data.length) {
+                    resultsEl.innerHTML = '<div class="no-results">Aucun résultat trouvé.</div>';
+                    return;
+                }
+
+                data.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'result';
+                    div.innerHTML = `
+                        <div class="result-header">
+                            <div><span class="filename">${esc(r.filename)}</span><span class="filetype">(${r.filetype || 'txt'})</span></div>
+                            <span class="score">${Math.round(r.score * 100)}%</span>
+                        </div>
+                        <div class="excerpt">${esc(r.excerpt || '')}</div>
+                        <div class="meta">Fichier: ${esc(r.filepath || '')} • Chunk ${r.chunk_index}/${r.total_chunks} • Ingéré: ${r.ingested_at ? r.ingested_at.split('T')[0] : '?'}</div>
+                    `;
+                    resultsEl.appendChild(div);
+                });
+            } catch (err) {
+                statusEl.className = 'status-bar error';
+                statusEl.textContent = `Erreur: ${err.message}`;
+            }
+        }
+
+        function esc(str) {
+            const d = document.createElement('div');
+            d.textContent = str || '';
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

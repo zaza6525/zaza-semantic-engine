@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 
 from zaza.config import load_config, Config
-from zaza.ingestion import ingest_file, IngestionError
+from zaza.ingestion import ingest_file, chunk_and_embed, IngestionError
 from zaza.analysis import analyze_text
 from zaza.database import Database
 from zaza.reporting import Reporter
@@ -73,14 +73,22 @@ class SemanticEngine:
                 # Store analysis
                 self.db.add_analysis(doc_id, analysis)
                 
-                 # Store semantic embedding
+               # Chunk and embed semantic vectors
                 if self.embed_store:
                     try:
-                        self.embed_store.add_document(
-                            str(doc_id), text, {"filename": file_path.name}
+                        result = chunk_and_embed(
+                            file_path,
+                            self.embed_store,
+                            encoding=self.config.ingestion.encoding,
+                            fallback=self.config.ingestion.fallback_encoding,
+                            max_chunk_size=self.config.semantic.max_chunk_size,
+                            overlap=self.config.semantic.overlap,
                         )
+                        chunk_count = result.get("chunk_count", 0)
+                        print(f"  ✅ {file_path.name} — {analysis['word_count']} words, {chunk_count} chunks")
                     except Exception as e:
-                        print(f"  ⚠️  Embedding store error for {file_path.name}: {e}")
+                        print(f"  ⚠️  Semantic embedding error for {file_path.name}: {e}")
+                        chunk_count = 0
                 
                 results.append({
                     "filename": file_path.name,

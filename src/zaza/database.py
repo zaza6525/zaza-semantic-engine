@@ -4,6 +4,28 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
+import re
+
+
+def _clean_excerpt(text: str, max_length: int = 200) -> str:
+    """Clean up an excerpt for display: truncate at sentence boundary."""
+    if not text:
+        return ""
+    if len(text) <= max_length:
+        return text.strip()
+    # Find the last sentence-ending punctuation within max_length
+    truncated = text[:max_length]
+    last_period = max(
+        truncated.rfind("."),
+        truncated.rfind("!"),
+        truncated.rfind("?"),
+        truncated.rfind(";"),
+    )
+    if last_period > max_length // 3:
+        truncated = truncated[:last_period + 1]
+    else:
+        truncated = truncated.rsplit(" ", 1)[0] + "..."
+    return truncated + " ..."
 
 
 class Database:
@@ -161,16 +183,58 @@ class Database:
             conn.close()
 
     def search_semantic(self, query: str, store) -> list:
-        """Semantic search using embedding store. Returns ranked results."""
+        """Semantic search using embedding store. Returns results grouped by file.
+
+        Groups chunks by filepath, picks the best chunk per file, and returns
+        a ranked list with filename, best excerpt, and score.
+        """
         if not store or not store.collection.count():
             return []
 
-        results = store.search(query, n_results=store.collection.count())
-        docs = []
+        max_results = store.collection.count()
+        results = store.search(query, n_results=max_results)
+
+        # Group by filepath (the document parent)
+        files = {}
         for r in results:
+            meta = r.get("metadata", {})
+            filepath = meta.get("filepath", "")
+            filename = meta.get("filename", r.get("id", "unknown"))
+            if filepath not in files:
+                files[filepath] = {
+                    "filename": filename,
+                    "filepath": filepath,
+                    "filetype": meta.get("filetype", ""),
+                    "ingested_at": meta.get("ingested_at", ""),
+                    "file_size": meta.get("file_size", 0),
+                    "best_chunk": r["document"],
+                    "best_score": r["distance"],
+                    "chunk_index": meta.get("chunk_index", 0),
+                    "total_chunks": meta.get("total_chunks", 1),
+                }
+            else:
+                # Keep the chunk with the highest score (lowest distance)
+                if r["distance"] < files[filepath]["best_score"]:
+                    files[filepath]["best_score"] = r["distance"]
+                    files[filepath]["best_chunk"] = r["document"]
+                    files[filepath]["chunk_index"] = meta.get("chunk_index", 0)
+                    files[filepath]["total_chunks"] = meta.get("total_chunks", 1)
+
+        # Sort by score (best first) and build result list
+        sorted_files = sorted(files.values(), key=lambda f: f["best_score"])
+        docs = []
+        for f in sorted_files:
+            # Clean excerpt: remove trailing sentence fragments for display
+            excerpt = _clean_excerpt(f["best_chunk"], 200)
             docs.append({
-                "id": r["id"],
-                "score": round(1.0 - r["distance"], 4),
-                "document": r.get("metadata", {}).get("_full_text", r["document"]),
+                "filename": f["filename"],
+                "filepath": f["filepath"],
+                "filetype": f["filetype"],
+                "score": round(1.0 - f["best_score"], 4),
+                "excerpt": excerpt,
+                "chunk_index": f["chunk_index"],
+                "total_chunks": f["total_chunks"],
+                "ingested_at": f["ingested_at"],
+                "file_size": f["file_size"],
             })
         return docs

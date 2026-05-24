@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 
@@ -21,7 +22,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="ZAZA Semantic Engine",
     description="Multi-format document ingestion and semantic analysis API",
-    version="2.0.0",
+    version="3.1.0",
     lifespan=lifespan,
 )
 
@@ -174,4 +175,11 @@ async def analyze_text(request: TextAnalysisRequest):
 @app.get("/health")
 async def health():
     """Health check."""
-    return {"status": "ok", "version": "2.0.0"}
+    return {"status": "ok", "version": "3.1.0"}
+
+
+@app.get("/search-ui", response_class=HTMLResponse)
+async def search_ui():
+    """Serve the semantic search UI."""
+    ui_path = Path(__file__).parent / "search_ui.html"
+    return ui_path.read_text(encoding="utf-8")

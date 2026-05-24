@@ -38,6 +38,8 @@ class SemanticConfig:
     model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     embed_dir: str = "./data/embeddings"
     max_search_results: int = 10
+    max_chunk_size: int = 512
+    overlap: int = 64
 
 
 @dataclass

@@ -2,16 +2,20 @@
 
 Local-first multi-format document ingestion engine with **real semantic search**.
 
-## Features
+[![Tests](https://github.com/zaza6525/zaza-semantic-engine/actions/workflows/test.yml/badge.svg)](https://github.com/zaza6525/zaza-semantic-engine/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://img.shields.io/pypi/v/zaza-semantic-engine.svg)](https://pypi.org/project/zaza-semantic-engine/)
 
-- **Multi-format ingestion**: TXT, Markdown, PDF, CSV, HTML, XML, DOCX, **JSON, YAML, EPUB**
-- **Semantic search**: Hybrid search using sentence-transformers embeddings stored in ChromaDB
-- **Keyword search**: Fuzzy filename matching (backward compatible)
-- **CLI**: Full command-line interface
-- **REST API**: FastAPI server with 8 endpoints
-- **Analysis**: Word frequency, lexical density, readability metrics
-- **Reporting**: JSON and CSV reports
-- **Local-only**: No external API calls — all processing on your machine
+## Why Zaza?
+
+Most document tools fall into two camps: cloud-based SaaS (your docs leave your machine) or dumb keyword search (finds exact word matches, misses the point). Zaza does both **locally** and **semantically**.
+
+- **Local-first** — your documents never leave your machine. No API keys, no data leaks.
+- **Semantic search** — find documents by *meaning*, not just keywords. Search "budget" and it finds "financial analysis", "quarterly results".
+- **Multi-format** — TXT, PDF, Markdown, DOCX, JSON, YAML, EPUB, CSV, HTML, XML. Ingest anything.
+- **50+ languages** — built on `paraphrase-multilingual-MiniLM-L12-v2`. Search in French, English, Arabic, or any supported language.
+- **Zero config** — `zaza ingest ./docs/` and you're done.
 
 ## Installation
 
@@ -49,13 +53,16 @@ zaza api
 zaza server
 ```
 
-## Semantic Search
+## Semantic Search in Action
 
-This project uses **sentence-transformers** (`paraphrase-multilingual-MiniLM-L12-v2`) to generate embeddings and **ChromaDB** for vector storage. The multilingual model supports **50+ languages** including French, English, Arabic, and more.
+This project uses **sentence-transformers** (`paraphrase-multilingual-MiniLM-L12-v2`) to generate embeddings and **ChromaDB** for vector storage.
 
-Unlike simple keyword search, semantic search understands context and can find relevant documents even when the exact words don't match.
+Unlike keyword search, semantic search finds documents with *related concepts* even when the exact words differ:
 
-Example: searching for "rapport budgétaire" will also find documents about "quarterly financial results" because the embeddings capture the semantic similarity.
+| Query | Keyword Search | Semantic Search |
+|-------|---------------|-----------------|
+| "budget" | Only files named "budget" | Finds "financial report", "quarterly analysis", "cost breakdown" |
+| "rapport financier" | Only French files with exact match | Finds "financial analysis", "balance sheet", "revenue summary" |
 
 ## CLI Commands
 
@@ -84,11 +91,28 @@ Example: searching for "rapport budgétaire" will also find documents about "qua
 | POST | `/ingest/file` | Upload and ingest a file |
 | POST | `/ingest/directory` | Ingest all files from directory |
 
+## Supported Formats
+
+| Format | Extension | Method |
+|--------|-----------|--------|
+| Plain text | `.txt` | Direct read |
+| Markdown | `.md`, `.markdown` | Syntax stripped |
+| PDF | `.pdf` | via `pypdf` |
+| CSV | `.csv` | Converted to key-value |
+| HTML | `.html`, `.htm` | via `BeautifulSoup` |
+| XML | `.xml` | Standard library |
+| Word | `.docx` | via `python-docx` |
+| JSON | `.json` | Recursive key-value (V3) |
+| YAML | `.yaml`, `.yml` | Recursive key-value (V3) |
+| ePUB | `.epub` | via `ebooklib` (V3, requires `[semantic]`) |
+
+## Model Caching (V3)
+
+The embedding model is cached globally within a single process. `zaza ingest` + `zaza search-semantic` doesn't reload the model — it reuses the cached instance. Startup time drops significantly.
+
 ## Configuration
 
 Edit `config.yaml` to customize paths, embedding models, and search settings.
-
-### Semantic Configuration
 
 ```yaml
 semantic:
@@ -97,23 +121,6 @@ semantic:
   embed_dir: "./data/embeddings"   # ChromaDB persist directory
   max_search_results: 10
 ```
-
-### Supported Formats
-
-- `.txt` — Plain text
-- `.md` / `.markdown` — Markdown (syntax stripped)
-- `.pdf` — PDF (via pypdf)
-- `.csv` — CSV (converted to key-value format)
-- `.html` / `.htm` — HTML (via BeautifulSoup)
-- `.xml` — XML (via standard library)
-- `.docx` — Word documents (via python-docx)
-- `.json` — **V3** JSON files (recursive key-value extraction)
-- `.yaml` / `.yml` — **V3** YAML files (recursive key-value extraction)
-- `.epub` — **V3** ePUB books (via ebooklib, requires `[semantic]` extras)
-
-### Model Caching (V3)
-
-The embedding model is now cached globally within a single process. Calling `zaza ingest` followed by `zaza search-semantic` will **not** reload the model — it reuses the cached instance. This significantly reduces startup time when running multiple CLI commands in sequence.
 
 ## License
 
