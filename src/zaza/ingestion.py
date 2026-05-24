@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 import csv
 import io
+import json
 import re
 
 
@@ -135,6 +136,96 @@ def ingest_docx(path: Path) -> str:
     return "\n\n".join(paragraphs)
 
 
+def ingest_json(path: Path, encoding: str = "utf-8", fallback: str = "latin-1") -> str:
+    """Read a JSON file and convert to readable text."""
+    text = _read_text(path, encoding, fallback)
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as e:
+        raise IngestionError(f"Invalid JSON: {e}")
+    # Convert structured JSON to readable flat text
+    lines = _json_to_text(data, indent=0)
+    return "\n".join(lines)
+
+
+def _json_to_text(obj, indent: int = 0) -> list:
+    """Recursively convert JSON to flat text lines."""
+    lines = []
+    prefix = "  " * indent
+    if isinstance(obj, dict):
+        for key, val in obj.items():
+            if isinstance(val, (dict, list)):
+                lines.append(f"{prefix}{key}:")
+                lines.extend(_json_to_text(val, indent + 1))
+            elif val is None:
+                lines.append(f"{prefix}{key}: null")
+            else:
+                lines.append(f"{prefix}{key}: {val}")
+    elif isinstance(obj, list):
+        for item in obj:
+            if isinstance(item, (dict, list)):
+                lines.append(f"{prefix}-")
+                lines.extend(_json_to_text(item, indent + 1))
+            else:
+                lines.append(f"{prefix}- {item}")
+    else:
+        lines.append(f"{prefix}{obj}")
+    return lines
+
+
+def ingest_yaml(path: Path, encoding: str = "utf-8", fallback: str = "latin-1") -> str:
+    """Read a YAML file and convert to readable text."""
+    text = _read_text(path, encoding, fallback)
+    try:
+        import yaml as pyyaml
+    except ImportError:
+        raise IngestionError("PyYAML is required for YAML support (already installed).")
+    try:
+        data = pyyaml.safe_load(text)
+    except pyyaml.YAMLError as e:
+        raise IngestionError(f"Invalid YAML: {e}")
+    if data is None:
+        return ""
+    lines = _yaml_to_text(data, indent=0)
+    return "\n".join(lines)
+
+
+def _yaml_to_text(obj, indent: int = 0) -> list:
+    """Recursively convert YAML data to flat text lines."""
+    return _json_to_text(obj, indent)
+
+
+def ingest_epub(path: Path) -> str:
+    """Extract text from an EPUB file using ebooklib."""
+    try:
+        from ebooklib import epub
+    except ImportError:
+        raise IngestionError("ebooklib is required for EPUB support. Install: pip install ebooklib")
+    
+    try:
+        book = epub.read_epub(str(path), options={"ignore_ncx": True})
+    except Exception as e:
+        raise IngestionError(f"Failed to read EPUB: {e}")
+    
+    texts = []
+    for item in book.get_items_of_type(epub.ITEM_DOCUMENT):
+        try:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(item.get_content(), "html.parser")
+            # Remove script/style/nav
+            for tag in soup(["script", "style", "nav", "header", "footer", "aside"]):
+                tag.decompose()
+            text = soup.get_text(separator="\n")
+            if text.strip():
+                texts.append(text.strip())
+        except Exception:
+            continue
+    
+    if not texts:
+        return ""
+    return "\n\n".join(texts)
+
+
 INGESTORS = {
     ".txt": ingest_txt,
     ".md": ingest_markdown,
@@ -145,6 +236,10 @@ INGESTORS = {
     ".htm": ingest_html,
     ".xml": ingest_xml,
     ".docx": ingest_docx,
+    ".json": ingest_json,
+    ".yaml": ingest_yaml,
+    ".yml": ingest_yaml,
+    ".epub": ingest_epub,
 }
 
 
@@ -182,5 +277,11 @@ def ingest_file(path: Path, encoding: str = "utf-8", fallback: str = "latin-1") 
         return ingest_xml(path, encoding, fallback)
     elif ext == ".docx":
         return ingest_docx(path)
+    elif ext in (".json",):
+        return ingest_json(path, encoding, fallback)
+    elif ext in (".yaml", ".yml"):
+        return ingest_yaml(path, encoding, fallback)
+    elif ext == ".epub":
+        return ingest_epub(path)
     
     raise IngestionError(f"No ingestor for extension: {ext}")

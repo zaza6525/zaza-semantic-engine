@@ -118,6 +118,11 @@ def cmd_api(args):
     uvicorn.run(app, host=args.host, port=args.port)
 
 
+def cmd_server(args):
+    """Handle the server command - alias for 'api'."""
+    cmd_api(args)
+
+
 
 def build_parser():
     """Build the argument parser."""
@@ -167,6 +172,12 @@ def build_parser():
     p_api.add_argument("--host", default="127.0.0.1", help="Host to bind to")
     p_api.add_argument("--port", type=int, default=8000, help="Port to bind to")
     p_api.set_defaults(func=cmd_api)
+    
+    # server (alias for api)
+    p_server = subparsers.add_parser("server", help="Start the REST API server (alias for 'api')")
+    p_server.add_argument("--host", default="127.0.0.1", help="Host to bind to")
+    p_server.add_argument("--port", type=int, default=8000, help="Port to bind to")
+    p_server.set_defaults(func=cmd_server)
     
     return parser
 

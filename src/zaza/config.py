@@ -35,7 +35,7 @@ class OutputConfig:
 @dataclass
 class SemanticConfig:
     enabled: bool = True
-    model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+    model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     embed_dir: str = "./data/embeddings"
     max_search_results: int = 10
 

@@ -4,7 +4,7 @@ Local-first multi-format document ingestion engine with **real semantic search**
 
 ## Features
 
-- **Multi-format ingestion**: TXT, Markdown, PDF, CSV, HTML, XML, DOCX
+- **Multi-format ingestion**: TXT, Markdown, PDF, CSV, HTML, XML, DOCX, **JSON, YAML, EPUB**
 - **Semantic search**: Hybrid search using sentence-transformers embeddings stored in ChromaDB
 - **Keyword search**: Fuzzy filename matching (backward compatible)
 - **CLI**: Full command-line interface
@@ -22,7 +22,7 @@ pip install -e .
 # With API support
 pip install -e ".[api]"
 
-# With semantic search (embeddings)
+# With semantic search (embeddings + multilingual model)
 pip install -e ".[semantic]"
 
 # Full installation
@@ -44,15 +44,18 @@ zaza search-semantic "financial analysis quarterly results" --top 5
 # View stats
 zaza stats
 
-# Start API server
+# Start API server (V3: either form works)
 zaza api
+zaza server
 ```
 
 ## Semantic Search
 
-This project uses **sentence-transformers** (`all-MiniLM-L6-v2`) to generate embeddings and **ChromaDB** for vector storage. Unlike simple keyword search, semantic search understands context and can find relevant documents even when the exact words don't match.
+This project uses **sentence-transformers** (`paraphrase-multilingual-MiniLM-L12-v2`) to generate embeddings and **ChromaDB** for vector storage. The multilingual model supports **50+ languages** including French, English, Arabic, and more.
 
-Example: searching for "budget report" will also find documents about "quarterly financial results" because the embeddings capture the semantic similarity.
+Unlike simple keyword search, semantic search understands context and can find relevant documents even when the exact words don't match.
+
+Example: searching for "rapport budgétaire" will also find documents about "quarterly financial results" because the embeddings capture the semantic similarity.
 
 ## CLI Commands
 
@@ -65,6 +68,7 @@ Example: searching for "budget report" will also find documents about "quarterly
 | `zaza documents` | List all indexed documents |
 | `zaza report [format]` | Generate report (json/csv) |
 | `zaza api` | Start the REST API server |
+| `zaza server` | **V3 alias** — same as `zaza api` |
 
 ## API Endpoints
 
@@ -89,7 +93,7 @@ Edit `config.yaml` to customize paths, embedding models, and search settings.
 ```yaml
 semantic:
   enabled: true                    # Set false to disable embeddings
-  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  model_name: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
   embed_dir: "./data/embeddings"   # ChromaDB persist directory
   max_search_results: 10
 ```
@@ -103,6 +107,13 @@ semantic:
 - `.html` / `.htm` — HTML (via BeautifulSoup)
 - `.xml` — XML (via standard library)
 - `.docx` — Word documents (via python-docx)
+- `.json` — **V3** JSON files (recursive key-value extraction)
+- `.yaml` / `.yml` — **V3** YAML files (recursive key-value extraction)
+- `.epub` — **V3** ePUB books (via ebooklib, requires `[semantic]` extras)
+
+### Model Caching (V3)
+
+The embedding model is now cached globally within a single process. Calling `zaza ingest` followed by `zaza search-semantic` will **not** reload the model — it reuses the cached instance. This significantly reduces startup time when running multiple CLI commands in sequence.
 
 ## License
 

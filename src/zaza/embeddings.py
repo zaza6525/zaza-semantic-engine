@@ -10,6 +10,27 @@ from typing import List, Dict, Optional, Tuple
 
 import chromadb
 
+# Global cache: (persist_directory, model_name) -> EmbeddingStore instance
+_MODEL_CACHE: Dict[str, "EmbeddingStore"] = {}
+
+
+def _cache_key(persist_dir: str, model_name: str) -> str:
+    """Generate a cache key from directory and model name."""
+    return f"{persist_dir}::{model_name}"
+
+
+def get_cached_store(persist_dir: str, model_name: str) -> "EmbeddingStore":
+    """Get or create an EmbeddingStore, cached globally for the process.
+    
+    This avoids loading the model into memory multiple times within the same
+    process (e.g. when calling zaza ingest && zaza search-semantic in the same
+    session or from a wrapper script).
+    """
+    key = _cache_key(persist_dir, model_name)
+    if key not in _MODEL_CACHE:
+        _MODEL_CACHE[key] = EmbeddingStore(persist_dir, model_name)
+    return _MODEL_CACHE[key]
+
 
 class EmbeddingStore:
     """ChromaDB-backed embedding store for semantic search."""
@@ -105,3 +126,9 @@ class EmbeddingStore:
     def count(self) -> int:
         """Return number of stored embeddings."""
         return self.collection.count()
+
+    def clear(self):
+        """Remove all documents from the store (keep collection)."""
+        result = self.collection.get()
+        if result and result["ids"]:
+            self.collection.delete(ids=result["ids"])

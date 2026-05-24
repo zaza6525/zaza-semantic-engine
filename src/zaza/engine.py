@@ -20,8 +20,8 @@ class SemanticEngine:
         self.embed_store = None
         if self.config.semantic.enabled:
             try:
-                from zaza.embeddings import EmbeddingStore
-                self.embed_store = EmbeddingStore(
+                from zaza.embeddings import get_cached_store
+                self.embed_store = get_cached_store(
                     self.config.semantic.embed_dir,
                     self.config.semantic.model_name
                 )
