@@ -1,3 +1,16 @@
+---
+title: Zaza Semantic Engine
+emoji: 🧠
+colorFrom: indigo
+colorTo: blue
+sdk: gradio
+sdk_version: 4.44.0
+app_file: app.py
+pinned: false
+license: mit
+short_description: Local-first multilingual semantic search (50+ languages)
+---
+
 # Zaza Semantic Engine
 
 Local-first multi-format document ingestion engine with **real semantic search**.

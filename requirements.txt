@@ -1,0 +1,19 @@
+# Hugging Face Space — install Zaza + deps for Gradio UI + semantic search
+gradio>=4.40
+fastapi>=0.104
+uvicorn>=0.24
+pydantic>=2.0
+python-multipart>=0.0.6
+
+# Ingestion deps
+pyyaml>=6.0
+pypdf>=4.0
+chardet>=5.0
+python-docx>=1.1
+beautifulsoup4>=4.12
+lxml>=5.0
+ebooklib>=0.18
+
+# Semantic deps
+sentence-transformers>=3.0
+chromadb>=0.5
