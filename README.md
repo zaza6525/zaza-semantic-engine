@@ -64,6 +64,10 @@ Unlike keyword search, semantic search finds documents with *related concepts* e
 | "budget" | Only files named "budget" | Finds "financial report", "quarterly analysis", "cost breakdown" |
 | "rapport financier" | Only French files with exact match | Finds "financial analysis", "balance sheet", "revenue summary" |
 
+## Demo
+
+Try it live on Hugging Face: [**Zaza Semantic Search Space**](https://huggingface.co/spaces/ffffre/zaza-semantic-search)
+
 ## CLI Commands
 
 | Command | Description |
