@@ -15,6 +15,16 @@ from zaza.ingestion import (
 )
 
 
+def _has_semantic_deps():
+    """Check if optional semantic dependencies are installed."""
+    try:
+        import chromadb  # noqa: F401
+        from sentence_transformers import SentenceTransformer  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
 class TestJsonIngestion:
     """Test JSON file ingestion."""
 
@@ -201,10 +211,8 @@ class TestCacheModel:
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     @pytest.mark.skipif(
-        not all([
-            True  # sentence_transformers check
-        ]),
-        reason="sentence-transformers not installed"
+        not _has_semantic_deps(),
+        reason="sentence-transformers or chromadb not installed"
     )
     def test_cache_same_model(self):
         """Test that same model returns cached instance."""
@@ -215,10 +223,8 @@ class TestCacheModel:
         assert store1 is store2
 
     @pytest.mark.skipif(
-        not all([
-            True
-        ]),
-        reason="sentence-transformers not installed"
+        not _has_semantic_deps(),
+        reason="sentence-transformers or chromadb not installed"
     )
     def test_cache_different_model(self):
         """Test that different model returns different instance."""
@@ -229,10 +235,8 @@ class TestCacheModel:
         assert store1 is not store2
 
     @pytest.mark.skipif(
-        not all([
-            True
-        ]),
-        reason="sentence-transformers not installed"
+        not _has_semantic_deps(),
+        reason="sentence-transformers or chromadb not installed"
     )
     def test_cache_different_dir(self):
         """Test that different directory returns different instance."""

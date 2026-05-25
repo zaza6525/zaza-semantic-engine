@@ -50,15 +50,15 @@ def test_ingest_xml():
 
 
 def test_ingest_docx_missing():
-    """Test DOCX raises helpful error with invalid file."""
+    """Test DOCX raises IngestionError for invalid/corrupt docx file."""
     with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as f:
-        f.write(b'PK\x03\x04')  # Fake docx header
+        f.write(b'PK\x03\x04')  # Fake docx header (not a valid zip/docx)
         f.flush()
         try:
             text = ingest_docx(Path(f.name))
         except Exception as e:
-            # Should raise some error (invalid docx), not silently succeed
-            assert "Package not found" in str(e) or "Package" in str(e)
+            # Should raise IngestionError for invalid docx content
+            assert isinstance(e, IngestionError)
     os.unlink(f.name)
 
 

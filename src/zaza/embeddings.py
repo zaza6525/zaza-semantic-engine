@@ -8,8 +8,6 @@ import json
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 
-import chromadb
-
 # Global cache: (persist_directory, model_name) -> EmbeddingStore instance
 _MODEL_CACHE: Dict[str, "EmbeddingStore"] = {}
 
@@ -54,6 +52,7 @@ class EmbeddingStore:
     @property
     def client(self):
         if self._client is None:
+            import chromadb
             self._client = chromadb.PersistentClient(path=str(self.persist_directory))
         return self._client
 

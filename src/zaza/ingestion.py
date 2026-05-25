@@ -133,7 +133,11 @@ def ingest_docx(path: Path) -> str:
     except ImportError:
         raise IngestionError("python-docx is required for DOCX support. Install: pip install python-docx")
     
-    doc = Document(str(path))
+    try:
+        doc = Document(str(path))
+    except Exception as e:
+        raise IngestionError(f"Invalid DOCX file: {e}")
+    
     paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
     return "\n\n".join(paragraphs)
 
