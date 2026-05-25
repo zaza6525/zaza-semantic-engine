@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="ZAZA Semantic Engine",
     description="Multi-format document ingestion and semantic analysis API",
-    version="3.1.0",
+    version="3.2.0",
     lifespan=lifespan,
 )
 

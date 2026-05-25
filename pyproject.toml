@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zaza-semantic-engine"
-version = "3.0.2"
+version = "3.2.0"
 description = "Local-first multi-format document ingestion engine with semantic search using sentence-transformers and ChromaDB"
 readme = "README.md"
 license = {text = "MIT"}
@@ -64,6 +64,9 @@ zaza-search-docs = "zaza.search_docs:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+zaza = ["*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
