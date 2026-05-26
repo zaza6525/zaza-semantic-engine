@@ -4,9 +4,12 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+
+# Allowed root path for directory ingestion (security)
+ALLOWED_INGEST_ROOT = None  # Set to a path string to restrict, None = unlimited
 
 
 @asynccontextmanager
@@ -71,27 +74,44 @@ async def ingest_single_file(file: UploadFile = File(...)):
     if not engine:
         raise HTTPException(500, "Engine not initialized")
     
-    # Save temp file
-    tmp_path = Path(f"/tmp/{file.filename}")
-    with open(tmp_path, "wb") as f:
-        content = await file.read()
-        f.write(content)
-    
+    # Use tempfile for safe filename handling
+    import tempfile
+    import os
+    safe_name = file.filename or "unnamed"
+    fd, tmp_path = tempfile.mkstemp(
+        suffix=Path(safe_name).suffix,
+        prefix="zaza_ingest_"
+    )
     try:
-        result = engine.ingest_file(str(tmp_path))
+        content = await file.read()
+        with os.fdopen(fd, 'wb') as f:
+            f.write(content)
+        
+        result = engine.ingest_file(tmp_path)
         return result
     except Exception as e:
         raise HTTPException(400, str(e))
     finally:
-        tmp_path.unlink(missing_ok=True)
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
 
 
 @app.post("/ingest/directory")
 async def ingest_directory(dir_path: Optional[str] = None):
-    """Ingest all files from a directory."""
+    """Ingest all files from a directory. If ALLOWED_INGEST_ROOT is set, 
+    the requested path must be under it."""
     engine = app.state.engine
     if not engine:
         raise HTTPException(500, "Engine not initialized")
+    
+    # Security: validate path against allowed root
+    if ALLOWED_INGEST_ROOT and dir_path:
+        resolved = Path(dir_path).resolve()
+        allowed = Path(ALLOWED_INGEST_ROOT).resolve()
+        if not str(resolved).startswith(str(allowed)):
+            raise HTTPException(403, "Directory outside allowed ingest root")
     
     results = engine.ingest_directory(dir_path)
     return results
@@ -175,7 +195,7 @@ async def analyze_text(request: TextAnalysisRequest):
 @app.get("/health")
 async def health():
     """Health check."""
-    return {"status": "ok", "version": "3.1.0"}
+    return {"status": "ok", "version": app.version}
 
 
 @app.get("/search-ui", response_class=HTMLResponse)

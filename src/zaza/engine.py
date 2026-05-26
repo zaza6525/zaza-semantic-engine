@@ -28,7 +28,7 @@ class SemanticEngine:
             except Exception as e:
                 print(f"  ⚠️  Semantic embeddings disabled: {e}")
     
-    def ingest_directory(self, dir_path: Optional[str] = None) -> List[Dict]:
+    def ingest_directory(self, dir_path: Optional[str] = None, recursive: bool = False) -> List[Dict]:
         """Ingest all supported files from a directory."""
         target = Path(dir_path) if dir_path else Path(self.config.ingestion.data_dir)
         
@@ -37,7 +37,10 @@ class SemanticEngine:
             return []
         
         extensions = self.config.ingestion.extensions
-        files = [f for f in target.iterdir() if f.is_file() and f.suffix.lower() in extensions]
+        if recursive:
+            files = [f for f in target.rglob('*') if f.is_file() and f.suffix.lower() in extensions]
+        else:
+            files = [f for f in target.iterdir() if f.is_file() and f.suffix.lower() in extensions]
         
         if not files:
             print(f"  ℹ️  No supported files found in {target}")
@@ -112,7 +115,7 @@ class SemanticEngine:
         return results
     
     def ingest_file(self, file_path: str) -> Dict:
-        """Ingest a single file."""
+        """Ingest a single file — uses the same chunking pipeline as ingest_directory."""
         path = Path(file_path)
         text = ingest_file(path, self.config.ingestion.encoding, self.config.ingestion.fallback_encoding)
         
@@ -132,17 +135,20 @@ class SemanticEngine:
         
         self.db.add_analysis(doc_id, analysis)
         
-        # Store semantic embedding
+        # Store semantic embedding using same chunking pipeline as directory ingest
         if self.embed_store:
-            self.embed_store.add_document(
-                doc_id=f"{doc_id}_{path.name}",
-                text=text,
-                metadata={
-                    "filename": path.name,
-                    "filepath": str(path),
-                    "filetype": path.suffix.lower(),
-                }
-            )
+            try:
+                from zaza.ingestion import chunk_and_embed
+                result = chunk_and_embed(
+                    path,
+                    self.embed_store,
+                    encoding=self.config.ingestion.encoding,
+                    fallback=self.config.ingestion.fallback_encoding,
+                    max_chunk_size=self.config.semantic.max_chunk_size,
+                    overlap=self.config.semantic.overlap,
+                )
+            except Exception as e:
+                print(f"  ⚠️  Semantic embedding error for {path.name}: {e}")
         
         return {
             "filename": path.name,

@@ -13,6 +13,7 @@ def chunk_text(
     max_chunk_size: int = 512,
     overlap: int = 64,
     chunk_prefix: str = "",
+    filepath: str = "",
 ) -> List[dict]:
     """Split text into overlapping chunks.
 
@@ -25,6 +26,7 @@ def chunk_text(
         max_chunk_size: Maximum characters per chunk (default 512).
         overlap: Characters of overlap between chunks (default 64).
         chunk_prefix: Prefix for chunk IDs (e.g. document filename).
+        filepath: Full file path for unique ID generation.
 
     Returns:
         List of dicts with keys: id, text, chunk_index, total_chunks,
@@ -39,12 +41,11 @@ def chunk_text(
     chunks = []
     current_chunk_text = ""
     chunk_index = 0
-    total_chars = 0
 
     for sentence in sentences:
         # If adding this sentence would exceed max_chunk_size, flush current chunk
         if len(current_chunk_text) + len(sentence) > max_chunk_size and current_chunk_text:
-            chunks.append(_make_chunk(current_chunk_text, chunk_index, chunk_prefix))
+            chunks.append(_make_chunk(current_chunk_text, chunk_index, chunk_prefix, filepath))
             chunk_index += 1
             # Keep the last `overlap` chars for continuity
             if overlap > 0 and len(current_chunk_text) > overlap:
@@ -55,7 +56,7 @@ def chunk_text(
 
     # Don't forget the last chunk
     if current_chunk_text.strip():
-        chunks.append(_make_chunk(current_chunk_text.strip(), chunk_index, chunk_prefix))
+        chunks.append(_make_chunk(current_chunk_text.strip(), chunk_index, chunk_prefix, filepath))
         chunk_index += 1
 
     # Tag each chunk with total_chunks
@@ -75,13 +76,12 @@ def _split_into_sentences(text: str) -> List[str]:
     return [s.strip() for s in raw if s.strip()]
 
 
-def _make_chunk(text: str, index: int, prefix: str) -> dict:
+def _make_chunk(text: str, index: int, prefix: str, filepath: str = "") -> dict:
     """Create a chunk dict with metadata."""
-    chunk_id = f"{prefix}_chunk_{index}" if prefix else f"chunk_{index}"
-    # Ensure unique ID even if prefix is empty
-    chunk_id = hashlib.md5(chunk_id.encode()).hexdigest()[:12]
-    if prefix:
-        chunk_id = f"{prefix[:20]}_{index}_{hashlib.md5(text[:50].encode()).hexdigest()[:8]}"
+    # Include full filepath hash to avoid collisions between files with same name
+    path_hash = hashlib.md5(filepath.encode()).hexdigest()[:8] if filepath else ""
+    text_hash = hashlib.md5(text[:50].encode()).hexdigest()[:8]
+    chunk_id = f"{path_hash}_{prefix[:15]}_{index}_{text_hash}" if prefix else f"{path_hash}_{index}_{text_hash}"
 
     return {
         "id": chunk_id,

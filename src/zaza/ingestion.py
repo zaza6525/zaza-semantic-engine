@@ -319,20 +319,21 @@ def chunk_and_embed(
         return {"filename": path.name, "chunk_count": 0, "status": "empty"}
 
     # Chunk the text
-    chunks = chunk_text(text, max_chunk_size=max_chunk_size, overlap=overlap)
+    chunks = chunk_text(text, max_chunk_size=max_chunk_size, overlap=overlap,
+                        chunk_prefix=path.name[:30].replace(" ", "_").replace(".", "_"),
+                        filepath=str(path))
 
     if not chunks:
         return {"filename": path.name, "chunk_count": 0, "status": "success", "total_words": 0}
 
     # Store each chunk with metadata
-    prefix = path.name[:30].replace(" ", "_").replace(".", "_")
     ingested_at = _now_iso()
     file_size = path.stat().st_size
     total_words = sum(len(c["text"].split()) for c in chunks)
 
     added = 0
     for chunk in chunks:
-        chunk_id = f"{prefix}_c{chunk['chunk_index']}"
+        chunk_id = chunk["id"]
         try:
             embed_store.add_document(
                 doc_id=chunk_id,

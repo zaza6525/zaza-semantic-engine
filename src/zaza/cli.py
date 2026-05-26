@@ -20,7 +20,8 @@ def cmd_ingest(args):
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
         print(f"  Scanning directory: {target}")
-        results = engine.ingest_directory(target)
+        recursive = getattr(args, 'recursive', False)
+        results = engine.ingest_directory(target, recursive=recursive)
         if results:
             print(json.dumps(results, indent=2, ensure_ascii=False))
 
@@ -138,6 +139,7 @@ def build_parser():
     p_ingest = subparsers.add_parser("ingest", help="Ingest files from directory")
     p_ingest.add_argument("directory", nargs="?", default=None, help="Directory to scan")
     p_ingest.add_argument("-f", "--file", help="Single file to ingest")
+    p_ingest.add_argument("-r", "--recursive", action="store_true", help="Scan directories recursively")
     p_ingest.set_defaults(func=cmd_ingest)
     
     # report

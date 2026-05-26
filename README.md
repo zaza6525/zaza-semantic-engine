@@ -85,7 +85,7 @@ Try it live on Hugging Face: [**Zaza Semantic Search Space**](https://huggingfac
 
 | Command | Description |
 |---------|-------------|
-| `zaza ingest <path>` | Index documents from a directory or file |
+| `zaza ingest <path>` | Index documents from a directory or file (use `-r` for recursive) |
 | `zaza search <query>` | Search documents by filename (keyword) |
 | `zaza search-semantic <query>` | Semantic search using embeddings |
 | `zaza stats` | Show indexing statistics |
