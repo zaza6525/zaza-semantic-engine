@@ -77,5 +77,7 @@ def load_config(config_path=None) -> Config:
         cfg.analysis = AnalysisConfig(**data["analysis"])
     if "output" in data:
         cfg.output = OutputConfig(**data["output"])
+    if "semantic" in data:
+        cfg.semantic = SemanticConfig(**data["semantic"])
     
     return cfg

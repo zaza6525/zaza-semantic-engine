@@ -11,7 +11,7 @@ license: mit
 short_description: Local-first multilingual semantic search (50+ languages)
 ---
 
-# Zaza Semantic Engine
+# Zaza Semantic Engine v3.2.0
 
 Local-first multi-format document ingestion engine with **real semantic search**.
 
