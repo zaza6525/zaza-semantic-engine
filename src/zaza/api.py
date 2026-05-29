@@ -1,11 +1,14 @@
 """FastAPI REST API for ZAZA Semantic Engine."""
 
+import tempfile
+import os
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body, Request
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # Allowed root path for directory ingestion (security)
@@ -27,6 +30,13 @@ app = FastAPI(
     description="Multi-format document ingestion and semantic analysis API",
     version="3.2.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -196,6 +206,55 @@ async def analyze_text(request: TextAnalysisRequest):
 async def health():
     """Health check."""
     return {"status": "ok", "version": app.version}
+
+
+@app.post("/ingest/audio")
+async def ingest_audio(file: UploadFile = File(...)):
+    """Transcribe audio via faster-whisper STT and auto-search."""
+    engine = app.state.engine
+    if not engine:
+        raise HTTPException(500, "Engine not initialized")
+
+    # Save temp audio
+    fd, tmp_path = tempfile.mkstemp(suffix=".webm", prefix="zaza_audio_")
+    try:
+        content = await file.read()
+        with os.fdopen(fd, "wb") as f:
+            f.write(content)
+
+        # STT via faster-whisper
+        text = _transcribe_audio(tmp_path)
+
+        if not text.strip():
+            return {"text": "", "results": [], "message": "Aucune parole détectée"}
+
+        # Auto-search
+        results = []
+        if engine.embed_store:
+            results = engine.search_semantic(text, n_results=10)
+
+        return {"text": text, "results": results}
+    except Exception as e:
+        raise HTTPException(400, str(e))
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+def _transcribe_audio(path):
+    """Transcribe audio file using faster-whisper on CPU."""
+    from faster_whisper import WhisperModel
+    # Lazy global cache — load once, reuse
+    if not hasattr(_transcribe_audio, "_model"):
+        _transcribe_audio._model = WhisperModel(
+            "large-v3", device="cpu", compute_type="int8"
+        )
+    segments, info = _transcribe_audio._model.transcribe(
+        path, language="fr", beam_size=1
+    )
+    return " ".join(seg.text for seg in segments)
 
 
 @app.get("/search-ui", response_class=HTMLResponse)

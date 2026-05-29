@@ -45,8 +45,13 @@ class EmbeddingStore:
     @property
     def model(self):
         if self._model is None:
+            import os
+            # Force CPU for the embedding model — the GPU is reserved for
+            # the main LLM server. The MiniLM model is small (~80 MB) and
+            # encodes in <1 s on CPU anyway.
+            os.environ.setdefault("SENTENCE_TRANSFORMERS_HOME", str(self.persist_directory / ".models"))
             from sentence_transformers import SentenceTransformer
-            self._model = SentenceTransformer(self.model_name)
+            self._model = SentenceTransformer(self.model_name, device="cpu")
         return self._model
 
     @property

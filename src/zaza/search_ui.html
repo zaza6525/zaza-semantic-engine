@@ -3,23 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZAZA Semantic Engine</title>
+<title>Zaza Semantic Engine</title>
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface2: #1a1a26;
-    --border: #2a2a3a;
-    --ink: #e4e4ec;
-    --muted: #8888a0;
-    --accent: #6c63ff;
-    --accent-hover: #7b73ff;
+    --bg: #06060a;
+    --surface: #0e0e16;
+    --surface2: #161622;
+    --surface3: #1e1e30;
+    --border: #2a2a3e;
+    --ink: #e8e8f0;
+    --muted: #6e6e8a;
+    --accent: #7c6cff;
+    --accent-glow: rgba(124, 108, 255, 0.3);
+    --accent-hover: #8d82ff;
     --danger: #ff4d6a;
+    --danger-glow: rgba(255, 77, 106, 0.3);
     --success: #4ddb8a;
-    --radius: 8px;
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    --mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    --success-glow: rgba(77, 219, 138, 0.3);
+    --warning: #ffaa4d;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   }
+
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -27,83 +35,172 @@
     font-family: var(--font);
     background: var(--bg);
     color: var(--ink);
-    line-height: 1.5;
+    line-height: 1.6;
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
-  /* Layout */
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse 800px 600px at 20% 20%, rgba(124, 108, 255, 0.04), transparent),
+      radial-gradient(ellipse 600px 400px at 80% 80%, rgba(77, 219, 138, 0.03), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
   .app {
-    max-width: 960px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2rem 1.5rem;
+    position: relative;
+    z-index: 1;
   }
 
+  /* Header */
   header {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--border);
   }
 
-  header h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
 
-  header .badge {
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border-radius: 99px;
-    background: var(--surface2);
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .logo h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  .logo h1 span {
     color: var(--muted);
-    border: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--muted);
     font-family: var(--mono);
   }
 
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 0;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success-glow);
+    animation: pulse 2s ease-in-out infinite;
   }
 
-  .tab {
-    padding: 0.6rem 1.2rem;
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Navigation Tabs */
+  .nav {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.35rem;
+    width: fit-content;
+  }
+
+  .nav-btn {
+    padding: 0.55rem 1.25rem;
     font-size: 0.85rem;
     color: var(--muted);
     cursor: pointer;
     border: none;
     background: none;
     font-family: var(--font);
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: color 0.15s;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+    font-weight: 500;
   }
 
-  .tab:hover { color: var(--ink); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .nav-btn:hover { color: var(--ink); background: var(--surface2); }
+  .nav-btn.active {
+    color: var(--ink);
+    background: var(--accent);
+    box-shadow: 0 0 16px var(--accent-glow);
+  }
 
-  .panel { display: none; }
+  .panel { display: none; animation: fadeIn 0.3s ease; }
   .panel.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: #3a3a50; }
+
+  .card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
 
   /* Drop Zone */
   .dropzone {
     border: 2px dashed var(--border);
     border-radius: var(--radius);
-    padding: 3rem 2rem;
+    padding: 4rem 2rem;
     text-align: center;
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
+    transition: all 0.3s;
     position: relative;
+    background: var(--surface);
   }
 
   .dropzone:hover, .dropzone.dragover {
     border-color: var(--accent);
-    background: rgba(108, 99, 255, 0.05);
+    background: rgba(124, 108, 255, 0.03);
+    box-shadow: 0 0 30px var(--accent-glow);
   }
 
   .dropzone input[type="file"] {
@@ -113,231 +210,423 @@
     cursor: pointer;
   }
 
-  .dropzone .icon {
-    font-size: 2rem;
-    margin-bottom: 0.75rem;
+  .dropzone .dz-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    filter: grayscale(0.3);
+  }
+
+  .dropzone .dz-title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  .dropzone .dz-title strong { color: var(--accent); }
+
+  .dropzone .dz-hint {
     color: var(--muted);
+    font-size: 0.8rem;
   }
 
-  .dropzone .label {
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-
-  .dropzone .label strong {
-    color: var(--accent);
-  }
-
-  /* Upload status */
+  /* Upload Progress */
   .upload-list {
-    margin-top: 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-top: 1.5rem;
   }
 
   .upload-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.6rem 0.75rem;
+    padding: 0.75rem 1rem;
     background: var(--surface);
-    border-radius: var(--radius);
-    font-size: 0.85rem;
     border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
   }
 
-  .upload-item .status {
+  .upload-item .dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
   }
 
-  .upload-item .status.ok { background: var(--success); }
-  .upload-item .status.err { background: var(--danger); }
-  .upload-item .name { flex: 1; }
-  .upload-item .meta { color: var(--muted); font-size: 0.8rem; }
+  .upload-item .dot.ok { background: var(--success); box-shadow: 0 0 6px var(--success-glow); }
+  .upload-item .dot.err { background: var(--danger); box-shadow: 0 0 6px var(--danger-glow); }
+  .upload-item .dot.pending { background: var(--warning); animation: pulse 1s infinite; }
 
-  /* Search */
-  .search-box {
+  .upload-item .name { flex: 1; font-weight: 500; }
+  .upload-item .meta { color: var(--muted); font-size: 0.8rem; font-family: var(--mono); }
+
+  /* Search Section */
+  .search-container {
     position: relative;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
   }
 
-  .search-box input {
+  .search-input-wrap {
+    position: relative;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .search-field {
+    flex: 1;
+    position: relative;
+  }
+
+  .search-field input {
     width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    padding: 0.85rem 1rem 0.85rem 3rem;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--ink);
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-family: var(--font);
     outline: none;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
   }
 
-  .search-box input:focus { border-color: var(--accent); }
-  .search-box input::placeholder { color: var(--muted); }
+  .search-field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
 
-  .search-box .search-icon {
+  .search-field input::placeholder { color: var(--muted); }
+
+  .search-field .field-icon {
     position: absolute;
-    left: 0.85rem;
+    left: 1rem;
     top: 50%;
     transform: translateY(-50%);
     color: var(--muted);
-    font-size: 0.9rem;
     pointer-events: none;
   }
-
-  .search-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .search-row input { flex: 1; }
 
   /* Buttons */
   .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.4rem;
-    padding: 0.6rem 1.1rem;
-    font-size: 0.85rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
     font-family: var(--font);
+    font-weight: 500;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--surface2);
     color: var(--ink);
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: all 0.2s;
     white-space: nowrap;
   }
 
-  .btn:hover { background: var(--surface2); border-color: var(--muted); }
+  .btn:hover { background: var(--surface3); }
 
   .btn.primary {
     background: var(--accent);
     border-color: var(--accent);
     color: #fff;
+    box-shadow: 0 0 20px var(--accent-glow);
   }
 
-  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.primary:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 0 30px var(--accent-glow);
+  }
 
   .btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
   }
 
+  /* Voice Button */
+  .btn-voice {
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+
+  .btn-voice:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .btn-voice.recording {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: white;
+    box-shadow: 0 0 30px var(--danger-glow);
+    animation: recordPulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes recordPulse {
+    0%, 100% { box-shadow: 0 0 20px var(--danger-glow); }
+    50% { box-shadow: 0 0 40px var(--danger-glow); }
+  }
+
+  /* Audio Visualizer */
+  .audio-visualizer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 40px;
+    margin-top: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .audio-visualizer.active { opacity: 1; }
+
+  .audio-bar {
+    width: 4px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: height 0.1s;
+  }
+
   /* Results */
   .results {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
 
   .result-card {
-    padding: 0.85rem 1rem;
+    padding: 1.25rem;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    font-size: 0.85rem;
+    transition: all 0.2s;
+    cursor: default;
   }
 
-  .result-card .title {
-    font-weight: 500;
+  .result-card:hover {
+    border-color: #3a3a50;
+    transform: translateX(4px);
+  }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-rank {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(124, 108, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-family: var(--mono);
+  }
+
+  .result-score {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .result-filename {
+    font-weight: 600;
+    font-size: 0.95rem;
     margin-bottom: 0.25rem;
   }
 
-  .result-card .score {
-    color: var(--accent);
-    font-family: var(--mono);
-    font-size: 0.75rem;
-  }
-
-  .result-card .preview {
+  .result-preview {
     color: var(--muted);
-    margin-top: 0.35rem;
-    font-size: 0.8rem;
-    line-height: 1.5;
+    font-size: 0.85rem;
+    line-height: 1.6;
   }
 
-  /* Stats */
+  .result-source {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .result-tag {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  /* Stats Dashboard */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
     margin-bottom: 1.5rem;
   }
 
   .stat-card {
-    padding: 1rem;
+    padding: 1.5rem;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     text-align: center;
+    transition: all 0.2s;
   }
 
-  .stat-card .value {
-    font-size: 1.5rem;
-    font-weight: 600;
+  .stat-card:hover { border-color: var(--accent); }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
     color: var(--ink);
     font-family: var(--mono);
+    line-height: 1.2;
   }
 
-  .stat-card .label {
-    font-size: 0.75rem;
+  .stat-label {
+    font-size: 0.8rem;
     color: var(--muted);
-    margin-top: 0.25rem;
+    margin-top: 0.35rem;
   }
 
+  /* Documents List */
   .doc-list {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.5rem;
   }
 
   .doc-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.6rem 0.75rem;
+    padding: 0.75rem 1rem;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     font-size: 0.85rem;
+    transition: all 0.2s;
   }
 
-  .doc-item .type {
+  .doc-item:hover { border-color: #3a3a50; }
+
+  .doc-type {
     font-family: var(--mono);
     font-size: 0.7rem;
-    padding: 2px 6px;
+    font-weight: 600;
+    padding: 3px 8px;
     background: var(--surface2);
-    color: var(--muted);
+    color: var(--accent);
     border-radius: 4px;
     text-transform: uppercase;
+    min-width: 40px;
+    text-align: center;
   }
 
-  .doc-item .name { flex: 1; }
-  .doc-item .words { color: var(--muted); font-size: 0.8rem; }
+  .doc-name { flex: 1; font-weight: 500; }
+  .doc-meta { color: var(--muted); font-size: 0.8rem; font-family: var(--mono); }
 
-  /* Empty state */
-  .empty {
-    text-align: center;
-    padding: 3rem 1rem;
+  .doc-delete {
+    background: none;
+    border: none;
     color: var(--muted);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s;
     font-size: 0.9rem;
   }
 
-  .empty .icon { font-size: 2rem; margin-bottom: 0.75rem; }
+  .doc-delete:hover { color: var(--danger); background: rgba(255, 77, 106, 0.1); }
 
-  /* Loading */
-  .loading {
+  /* Filter */
+  .filter-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-family: var(--font);
+    outline: none;
+    transition: all 0.2s;
+    margin-bottom: 1rem;
+  }
+
+  .filter-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .filter-input::placeholder { color: var(--muted); }
+
+  /* Empty State */
+  .empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--ink);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 0.85rem 1.5rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    color: var(--ink);
+    transform: translateY(150%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+
+  .toast.show { transform: translateY(0); }
+  .toast.error { border-color: var(--danger); }
+  .toast.success { border-color: var(--success); }
+
+  /* Loading Spinner */
+  .spinner {
     display: inline-block;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     border: 2px solid var(--border);
     border-top-color: var(--accent);
     border-radius: 50%;
@@ -346,31 +635,15 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    padding: 0.75rem 1.25rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-size: 0.85rem;
-    color: var(--ink);
-    transform: translateY(120%);
-    transition: transform 0.3s ease;
-    z-index: 100;
-  }
-
-  .toast.show { transform: translateY(0); }
-  .toast.error { border-color: var(--danger); }
-  .toast.success { border-color: var(--success); }
-
   /* Responsive */
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     .app { padding: 1rem; }
-    header h1 { font-size: 1.25rem; }
+    header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+    .nav { width: 100%; overflow-x: auto; }
+    .nav-btn { flex: 1; text-align: center; padding: 0.5rem 0.75rem; font-size: 0.8rem; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .search-input-wrap { flex-direction: column; }
+    .btn-voice { width: 100%; border-radius: var(--radius); height: auto; padding: 0.75rem; }
   }
 </style>
 </head>
@@ -378,89 +651,114 @@
 
 <div class="app">
   <header>
-    <h1>ZAZA Semantic Engine</h1>
-    <span class="badge" id="version">v3.1.0</span>
+    <div class="logo">
+      <div class="logo-icon">Z</div>
+      <h1>Zaza Semantic <span>Engine</span></h1>
+    </div>
+    <div class="header-status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Connecting...</span>
+    </div>
   </header>
 
-  <div class="tabs">
-    <button class="tab active" data-tab="ingest">Ingestion</button>
-    <button class="tab" data-tab="search">Recherche</button>
-    <button class="tab" data-tab="documents">Documents</button>
-    <button class="tab" data-tab="stats">Statistiques</button>
-  </div>
+  <nav class="nav">
+    <button class="nav-btn active" data-tab="ingest">Ingestion</button>
+    <button class="nav-btn" data-tab="search">Recherche</button>
+    <button class="nav-btn" data-tab="documents">Documents</button>
+    <button class="nav-btn" data-tab="stats">Statistiques</button>
+  </nav>
 
   <!-- INGEST PANEL -->
   <div class="panel active" id="panel-ingest">
     <div class="dropzone" id="dropzone">
       <input type="file" multiple id="file-input">
-      <div class="icon">📁</div>
-      <div class="label">Glissez des fichiers ici ou <strong>cliquez pour sélectionner</strong></div>
-      <div class="label" style="margin-top:0.5rem;font-size:0.75rem">TXT, MD, PDF, DOCX, CSV — Multi-formats</div>
+      <span class="dz-icon">📂</span>
+      <div class="dz-title">Glissez des fichiers ici ou <strong>cliquez</strong></div>
+      <div class="dz-hint">PDF, DOCX, TXT, MD, HTML, XML, CSV, JSON, YAML, EPUB, MP3, WAV, OGG</div>
     </div>
     <div class="upload-list" id="upload-list"></div>
   </div>
 
   <!-- SEARCH PANEL -->
   <div class="panel" id="panel-search">
-    <div class="search-row">
-      <div class="search-box" style="flex:1">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="search-input" placeholder="Rechercher un document ou requête sémantique..." autocomplete="off">
+    <div class="card">
+      <div class="card-title">Recherche sémantique</div>
+      <div class="search-input-wrap">
+        <div class="search-field">
+          <span class="field-icon">⌕</span>
+          <input type="text" id="search-input" placeholder="Recherchez dans vos documents..." autocomplete="off">
+        </div>
+        <button class="btn primary" id="search-btn">Chercher</button>
+        <button class="btn-voice" id="voice-btn" title="Recherche vocale">🎙</button>
       </div>
-      <button class="btn primary" id="search-btn">Chercher</button>
+      <div class="audio-visualizer" id="visualizer"></div>
+      <div id="voice-status" style="text-align:center;margin-top:0.5rem;font-size:0.8rem;color:var(--muted);display:none"></div>
     </div>
     <div id="search-results" class="results"></div>
   </div>
 
   <!-- DOCUMENTS PANEL -->
   <div class="panel" id="panel-documents">
-    <div class="search-box">
-      <span class="search-icon">📄</span>
-      <input type="text" id="doc-filter" placeholder="Filtrer par nom de fichier...">
-    </div>
+    <input type="text" class="filter-input" id="doc-filter" placeholder="Filtrer par nom de fichier...">
     <div id="doc-list" class="doc-list"></div>
   </div>
 
   <!-- STATS PANEL -->
   <div class="panel" id="panel-stats">
     <div class="stats-grid" id="stats-grid">
-      <div class="stat-card"><div class="value">—</div><div class="label">Documents</div></div>
-      <div class="stat-card"><div class="value">—</div><div class="label">Mots totaux</div></div>
-      <div class="stat-card"><div class="value">—</div><div class="label">Caractères</div></div>
-      <div class="stat-card"><div class="value">—</div><div class="label">Densité lex.</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-docs">—</div><div class="stat-label">Documents</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-words">—</div><div class="stat-label">Mots totaux</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-chars">—</div><div class="stat-label">Caractères</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-density">—</div><div class="stat-label">Densité lexicale</div></div>
     </div>
-    <div id="embeddings-status" class="result-card" style="display:none"></div>
+    <div class="card" id="embeddings-card" style="display:none">
+      <div class="card-title">Moteur sémantique</div>
+      <div id="embeddings-info"></div>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const API = '';
+const API = window.location.origin;
 
-// Tabs
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+// ── Navigation ──
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'stats') loadStats();
-    if (tab.dataset.tab === 'documents') loadDocs();
-    if (tab.dataset.tab === 'search') document.getElementById('search-input').focus();
+    btn.classList.add('active');
+    const panel = document.getElementById('panel-' + btn.dataset.tab);
+    panel.classList.add('active');
+    if (btn.dataset.tab === 'stats') loadStats();
+    if (btn.dataset.tab === 'documents') loadDocs();
   });
 });
 
-// Toast
+// ── Toast ──
 function toast(msg, type = '') {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className = 'toast ' + type;
-  setTimeout(() => el.classList.add('show'), 10);
-  setTimeout(() => el.classList.remove('show'), 3000);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => el.classList.remove('show'), 4000);
 }
 
-// Upload
+// ── Health Check ──
+async function checkHealth() {
+  try {
+    const r = await fetch(API + '/health');
+    const d = await r.json();
+    document.getElementById('status-text').textContent = d.version || 'online';
+    document.getElementById('status-dot').style.background = 'var(--success)';
+  } catch {
+    document.getElementById('status-text').textContent = 'offline';
+    document.getElementById('status-dot').style.background = 'var(--danger)';
+  }
+}
+
+// ── File Upload ──
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('file-input');
 const uploadList = document.getElementById('upload-list');
@@ -473,8 +771,7 @@ const uploadList = document.getElementById('upload-list');
 });
 
 dropzone.addEventListener('drop', e => {
-  const files = e.dataTransfer.files;
-  if (files.length) handleFiles(files);
+  if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
 });
 
 fileInput.addEventListener('change', () => {
@@ -489,151 +786,281 @@ async function handleFiles(files) {
     item.className = 'upload-item';
     item.id = id;
     item.innerHTML = `
-      <span class="status"></span>
+      <span class="dot pending"></span>
       <span class="name">${file.name}</span>
-      <span class="meta">En cours...</span>
+      <span class="meta">Envoi...</span>
     `;
-    uploadList.appendChild(item);
+    uploadList.prepend(item);
 
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const resp = await fetch(API + '/ingest/file', { method: 'POST', body: formData });
-      if (!resp.ok) throw new Error(await resp.text());
-      const result = await resp.json();
-      const statusEl = item.querySelector('.status');
-      statusEl.className = 'status ok';
-      const metaEl = item.querySelector('.meta');
-      metaEl.textContent = result.word_count + ' mots';
+      const res = await fetch(API + '/ingest/file', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      const dot = item.querySelector('.dot');
+      const meta = item.querySelector('.meta');
+
+      if (res.ok) {
+        dot.className = 'dot ok';
+        const wc = data.word_count || '?';
+        const words = (data.top_words || []).slice(0, 3).map(w => w.word).join(', ');
+        meta.textContent = `${wc} mots${words ? ' — ' + words : ''}`;
+      } else {
+        dot.className = 'dot err';
+        meta.textContent = data.detail || 'Erreur';
+      }
     } catch (err) {
-      const statusEl = item.querySelector('.status');
-      statusEl.className = 'status err';
-      const metaEl = item.querySelector('.meta');
-      metaEl.textContent = err.message;
+      const dot = item.querySelector('.dot');
+      const meta = item.querySelector('.meta');
+      dot.className = 'dot err';
+      meta.textContent = err.message;
     }
   }
 }
 
-// Search
+// ── Search ──
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
 const searchResults = document.getElementById('search-results');
 
-async function doSearch(query, semantic = true) {
-  if (!query) return;
-  searchResults.innerHTML = '<div class="result-card"><span class="loading"></span> Recherche...</div>';
-  try {
-    const url = semantic
-      ? `/search-semantic?query=${encodeURIComponent(query)}&top=10`
-      : `/search?query=${encodeURIComponent(query)}`;
-    const resp = await fetch(API + url);
-    if (!resp.ok) throw new Error('Recherche échouée');
-    const results = await resp.json();
-    if (!results.length) {
-      searchResults.innerHTML = '<div class="empty"><div class="icon">🔍</div>Aucun résultat</div>';
-      return;
-    }
-    searchResults.innerHTML = results.map(r => {
-      const score = r.score !== undefined ? ` <span class="score">${r.score.toFixed(3)}</span>` : '';
-      const preview = r.preview || r.document || '';
-      return `
-        <div class="result-card">
-          <div class="title">${r.filename || r.document || 'Document'}${score}</div>
-          ${preview ? `<div class="preview">${escapeHtml(preview.substring(0, 300))}</div>` : ''}
-        </div>
-      `;
-    }).join('');
-  } catch (err) {
-    searchResults.innerHTML = `<div class="result-card" style="border-color:var(--danger)">${err.message}</div>`;
-  }
-}
+searchBtn.addEventListener('click', doSearch);
+searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
-function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-searchBtn.addEventListener('click', () => {
+async function doSearch() {
   const q = searchInput.value.trim();
-  if (q) doSearch(q, true);
-});
+  if (!q) return;
 
-searchInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const q = searchInput.value.trim();
-    if (q) doSearch(q, true);
-  }
-});
+  searchBtn.disabled = true;
+  searchBtn.innerHTML = '<span class="spinner"></span>';
+  searchResults.innerHTML = '';
 
-// Documents
-let allDocs = [];
-async function loadDocs() {
-  const list = document.getElementById('doc-list');
-  list.innerHTML = '<div class="empty"><span class="loading"></span></div>';
   try {
-    const resp = await fetch(API + '/documents');
-    if (!resp.ok) throw new Error('Chargement échoué');
-    allDocs = await resp.json();
-    renderDocs(allDocs);
+    const res = await fetch(API + '/search-semantic?query=' + encodeURIComponent(q) + '&top=10');
+    const data = await res.json();
+
+    if (res.ok && Array.isArray(data) && data.length > 0) {
+      data.forEach((r, i) => {
+        const meta = r.metadata || {};
+        const score = Math.max(0, (1 - (r.distance || 1))).toFixed(3);
+        const preview = (r.document || '').slice(0, 300).replace(/\n/g, ' ');
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.innerHTML = `
+          <div class="result-header">
+            <span class="result-rank">#${i + 1}</span>
+            <span class="result-score">score ${score}</span>
+          </div>
+          <div class="result-filename">${meta.filename || '?'}</div>
+          <div class="result-preview">${preview}${(r.document || '').length > 300 ? '…' : ''}</div>
+          <div class="result-source">
+            <span class="result-tag">${(meta.source_type || '').toUpperCase() || ''}</span>
+            <span class="result-tag">${(meta.word_count || 0).toLocaleString()} mots</span>
+          </div>
+        `;
+        searchResults.appendChild(card);
+      });
+    } else {
+      searchResults.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">Aucun résultat</div>
+          <div>Essayez une autre requête ou ingérez des documents</div>
+        </div>`;
+    }
   } catch (err) {
-    list.innerHTML = `<div class="result-card" style="border-color:var(--danger)">${err.message}</div>`;
+    toast('Erreur de recherche: ' + err.message, 'error');
+  } finally {
+    searchBtn.disabled = false;
+    searchBtn.textContent = 'Chercher';
   }
 }
 
-function renderDocs(docs) {
-  const list = document.getElementById('doc-list');
-  if (!docs.length) {
-    list.innerHTML = '<div class="empty"><div class="icon">📄</div>Aucun document ingéré</div>';
-    return;
+// ── Voice Search ──
+let mediaRecorder = null;
+let audioChunks = [];
+const voiceBtn = document.getElementById('voice-btn');
+const visualizer = document.getElementById('visualizer');
+const voiceStatus = document.getElementById('voice-status');
+
+// Create visualizer bars
+for (let i = 0; i < 20; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'audio-bar';
+  visualizer.appendChild(bar);
+}
+
+let animFrameId = null;
+
+voiceBtn.addEventListener('click', async () => {
+  if (voiceBtn.classList.contains('recording')) {
+    // Stop recording
+    stopRecording();
+  } else {
+    // Start recording
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        await sendAudioForSearch(blob);
+        stream.getTracks().forEach(t => t.stop());
+      };
+
+      mediaRecorder.start();
+      voiceBtn.classList.add('recording');
+      voiceBtn.textContent = '⏹';
+      visualizer.classList.add('active');
+      voiceStatus.style.display = 'block';
+      voiceStatus.textContent = 'Enregistrement... Parlez maintenant.';
+      animateVisualizer(stream);
+
+    } catch (err) {
+      toast('Microphone inaccessible: ' + err.message, 'error');
+    }
   }
-  list.innerHTML = docs.map(d => `
-    <div class="doc-item">
-      <span class="type">${d.filetype || '?'}</span>
-      <span class="name">${d.filename || d.name || 'Document'}</span>
-      <span class="words">${d.word_count || d.words || '—'} mots</span>
-    </div>
-  `).join('');
+});
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  voiceBtn.classList.remove('recording');
+  voiceBtn.textContent = '🎙';
+  visualizer.classList.remove('active');
+  voiceStatus.textContent = 'Transcription en cours...';
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+}
+
+async function sendAudioForSearch(blob) {
+  try {
+    const formData = new FormData();
+    formData.append('audio', blob, 'recording.webm');
+    const res = await fetch(API + '/ingest/audio', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (res.ok) {
+      const text = data.text || '';
+      voiceStatus.textContent = 'Transcription reçue — recherche en cours...';
+      searchInput.value = text;
+      // Auto-search
+      await doSearch();
+    } else {
+      voiceStatus.textContent = 'Erreur: ' + (data.detail || 'Transcription échouée');
+      toast(data.detail || 'Transcription échouée', 'error');
+    }
+  } catch (err) {
+    voiceStatus.textContent = 'Erreur réseau';
+    toast(err.message, 'error');
+  }
+  setTimeout(() => { voiceStatus.style.display = 'none'; }, 5000);
+}
+
+function animateVisualizer(stream) {
+  const audioCtx = new AudioContext();
+  const source = audioCtx.createMediaStreamSource(stream);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 64;
+  source.connect(analyser);
+  const bars = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bars);
+  const barEls = visualizer.querySelectorAll('.audio-bar');
+
+  function draw() {
+    animFrameId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+    barEls.forEach((bar, i) => {
+      const h = Math.max(4, (dataArray[i] / 255) * 40);
+      bar.style.height = h + 'px';
+    });
+  }
+  draw();
+}
+
+// ── Documents List ──
+async function loadDocs(filter = '') {
+  const docList = document.getElementById('doc-list');
+  docList.innerHTML = '<div style="text-align:center;padding:2rem"><span class="spinner"></span></div>';
+
+  try {
+    const url = filter
+      ? API + '/documents?search=' + encodeURIComponent(filter)
+      : API + '/documents';
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (res.ok && data.length > 0) {
+      docList.innerHTML = '';
+      data.forEach(doc => {
+        const item = document.createElement('div');
+        item.className = 'doc-item';
+        item.innerHTML = `
+          <span class="doc-type">${doc.filetype || '?'}</span>
+          <span class="doc-name">${doc.filename}</span>
+          <span class="doc-meta">${doc.word_count?.toLocaleString() || 0} mots</span>
+        `;
+        docList.appendChild(item);
+      });
+    } else {
+      docList.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">📄</div>
+          <div class="empty-title">Aucun document</div>
+          <div>Commencez par ingérer des fichiers</div>
+        </div>`;
+    }
+  } catch (err) {
+    docList.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div>Erreur: ${err.message}</div></div>`;
+  }
 }
 
 document.getElementById('doc-filter').addEventListener('input', e => {
-  const q = e.target.value.toLowerCase();
-  renderDocs(q ? allDocs.filter(d => (d.filename || '').toLowerCase().includes(q)) : allDocs);
+  loadDocs(e.target.value);
 });
 
-// Stats
+// ── Stats ──
 async function loadStats() {
   try {
-    const [summary, embed] = await Promise.all([
-      fetch(API + '/summary').then(r => r.json()),
-      fetch(API + '/embeddings/status').then(r => r.json()).catch(() => ({}))
+    const [summaryRes, embedRes] = await Promise.all([
+      fetch(API + '/summary'),
+      fetch(API + '/embeddings/status')
     ]);
-    const cards = document.querySelectorAll('.stat-card');
-    if (summary) {
-      cards[0].querySelector('.value').textContent = summary.total_documents || 0;
-      cards[1].querySelector('.value').textContent = summary.total_words ? summary.total_words.toLocaleString('fr') : 0;
-      cards[2].querySelector('.value').textContent = summary.total_characters ? summary.total_characters.toLocaleString('fr') : 0;
-      cards[3].querySelector('.value').textContent = (summary.average_lexical_density || 0).toFixed(1) + '%';
+
+    const summary = await summaryRes.json();
+    const embed = await embedRes.json();
+
+    if (summaryRes.ok) {
+      document.getElementById('stat-docs').textContent = (summary.total_documents || 0).toLocaleString();
+      document.getElementById('stat-words').textContent = (summary.total_words || 0).toLocaleString();
+      document.getElementById('stat-chars').textContent = (summary.total_characters || 0).toLocaleString();
+      document.getElementById('stat-density').textContent = (summary.average_lexical_density || 0)?.toFixed(2) || '—';
     }
-    const statusEl = document.getElementById('embeddings-status');
+
+    const embedCard = document.getElementById('embeddings-card');
+    const embedInfo = document.getElementById('embeddings-info');
+
     if (embed.enabled) {
-      statusEl.style.display = 'block';
-      statusEl.innerHTML = `<div class="score">✅ Embeddings: ${embed.model} — ${embed.documents_count} documents indexés</div>`;
+      embedCard.style.display = 'block';
+      embedInfo.innerHTML = `
+        <div style="display:flex;flex-wrap:wrap;gap:1rem">
+          <div><span style="color:var(--muted);font-size:0.8rem">Modèle</span><br><code style="font-size:0.85rem">${embed.model || '?'}</code></div>
+          <div><span style="color:var(--muted);font-size:0.8rem">Embeddings</span><br><strong>${(embed.documents_count || 0).toLocaleString()}</strong></div>
+        </div>`;
     } else {
-      statusEl.style.display = 'block';
-      statusEl.innerHTML = `<div style="color:var(--muted)">⚠️ Embeddings non activés (installez le package avec [semantic])</div>`;
+      embedCard.style.display = 'block';
+      embedInfo.innerHTML = `<div style="color:var(--muted);font-size:0.85rem">Embeddings désactivés — ${embed.reason || ''}</div>`;
     }
   } catch (err) {
-    const grid = document.getElementById('stats-grid');
-    grid.innerHTML = `<div class="result-card" style="grid-column:1/-1;border-color:var(--danger)">Erreur chargement: ${err.message}</div>`;
+    toast('Erreur stats: ' + err.message, 'error');
   }
 }
 
-// Health check
-fetch(API + '/health')
-  .then(r => r.json())
-  .then(data => {
-    document.getElementById('version').textContent = 'v' + (data.version || '3.1.0');
-  })
-  .catch(() => {});
+// ── Init ──
+checkHealth();
+setInterval(checkHealth, 30000);
 </script>
 </body>
 </html>
